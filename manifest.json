@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "OSINT Pivot Tracker",
+  "name": "Urd",
   "version": "1.0.7",
-  "description": "Locally builds a pivot tree of your browsing activity: navigation, tab spawns, and text-to-search pivots. Nothing leaves your machine.",
+  "description": "Locally builds a pivot tree of your browsing activity: navigation, tab spawns, and text-to-search pivots.",
   "icons": {
     "48": "icons/icon-48.png",
     "96": "icons/icon-96.png"
@@ -39,11 +39,11 @@
       "48": "icons/icon-48.png",
       "96": "icons/icon-96.png"
     },
-    "default_title": "OSINT Pivot Tracker"
+    "default_title": "Urd"
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "osint-pivot-tracker@local.extension",
+      "id": "urd@local.extension",
       "strict_min_version": "109.0",
       "data_collection_permissions": {
         "required": [
