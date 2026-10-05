@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Urd",
-  "version": "1.0.7",
+  "version": "1.0.0",
   "description": "Locally builds a pivot tree of your browsing activity: navigation, tab spawns, and text-to-search pivots.",
   "icons": {
     "48": "icons/icon-48.png",
