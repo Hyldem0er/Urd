@@ -1,0 +1,83 @@
+{
+  "_comment": "Translation sites used for translation pivots. `host` is a case-insensitive regex source; `pathPrefix`, when set, filters the pathname. Add an object to extend the list.",
+  "translators": [
+    {
+      "name": "DeepL",
+      "host": "(^|\\.)deepl\\.com$"
+    },
+    {
+      "name": "Google Translate",
+      "host": "(^|\\.)translate\\.google\\.[a-z.]+$"
+    },
+    {
+      "name": "Yandex Translate",
+      "host": "(^|\\.)translate\\.yandex\\.[a-z.]+$"
+    },
+    {
+      "name": "Baidu Translate",
+      "host": "(^|\\.)fanyi\\.baidu\\.com$"
+    },
+    {
+      "name": "Baidu Translate",
+      "host": "(^|\\.)translate\\.baidu\\.com$"
+    },
+    {
+      "name": "Bing Microsoft Translator",
+      "host": "(^|\\.)bing\\.com$",
+      "pathPrefix": "/translator"
+    },
+    {
+      "name": "Reverso",
+      "host": "(^|\\.)reverso\\.net$"
+    },
+    {
+      "name": "Reverso Context",
+      "host": "(^|\\.)context\\.reverso\\.net$"
+    },
+    {
+      "name": "Naver Papago",
+      "host": "(^|\\.)papago\\.naver\\.com$"
+    },
+    {
+      "name": "Naver Translate",
+      "host": "(^|\\.)translate\\.naver\\.com$"
+    },
+    {
+      "name": "Systran",
+      "host": "(^|\\.)translate\\.systran\\.net$"
+    },
+    {
+      "name": "Linguee",
+      "host": "(^|\\.)linguee\\.com$"
+    },
+    {
+      "name": "Lingvanex",
+      "host": "(^|\\.)lingvanex\\.com$"
+    },
+    {
+      "name": "QQ Translate",
+      "host": "(^|\\.)translate\\.qq\\.com$"
+    },
+    {
+      "name": "PONS",
+      "host": "(^|\\.)pons\\.com$"
+    },
+    {
+      "name": "ModernMT",
+      "host": "(^|\\.)modernmt\\.com$"
+    },
+    {
+      "name": "Amazon Translate Console",
+      "host": "(^|\\.)console\\.aws\\.amazon\\.com$",
+      "pathPrefix": "/translate"
+    },
+    {
+      "name": "ImTranslator",
+      "host": "(^|\\.)imtranslator\\.net$"
+    },
+    {
+      "name": "Apertium",
+      "host": "(^|\\.)apertium\\.org$"
+    }
+  ]
+}

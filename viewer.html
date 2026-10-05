@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>OSINT Pivot Tracker — Tree</title>
+<link rel="stylesheet" href="viewer.css" />
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand">
+      <img class="app-icon" src="assets/urd.png" alt="Urd" />
+      <div class="brand-text">
+        <h1>Urd</h1>
+        <p id="rangeLabel">Urd's time threads</p>
+      </div>
+    </div>
+    <div class="filters">
+      <input id="search" type="text" placeholder='Filter with : + AND · | OR · "" · ()' title="Spaces mean AND. Use + for AND, | for OR, ( ) for groups. Anything inside double quotes is literal: \"+\" searches for +, \"a | b\" searches for that exact phrase." />
+      <label class="chk"><input type="checkbox" id="onlyPivots" /> Pivot chains only</label>
+      <label class="chk"><input type="checkbox" id="onlyFavorites" /> ★ Favorites only</label>
+    </div>
+    <div class="toolbar">
+      <button id="btnFit">Fit view</button>
+      <button id="btnAutoArrange" title="Stack each browsing story in its own row, left-to-right within the row, minimizing crossing connections (Ctrl+Z to undo)">Vertical layout</button>
+      <button id="btnResetLayout" title="Clear manual positions and restore the automatic horizontal graph layout">Horizontal layout</button>
+      <button id="btnExportReport">Export report</button>
+      <button id="btnExportJson">Export JSON</button>
+      <button id="btnImport">Import JSON</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none" />
+
+    </div>
+  </header>
+
+  <main>
+    <div id="canvasWrap">
+      <canvas id="dotBg"></canvas>
+      <canvas id="dotFx"></canvas>
+      <svg id="canvas" xmlns="http://www.w3.org/2000/svg" tabindex="0"></svg>
+      <div id="selectionBox" class="hidden"></div>
+      <div id="emptyState" class="hidden">
+        <p>No activity recorded yet.</p>
+        <p class="dim">Browse normally — pages, tab spawns and text-to-search pivots will appear here.</p>
+      </div>
+      <button id="sidePanelToggle" title="Tools">›</button>
+      <aside id="sidePanel">
+        <button id="btnAddNode">+ Pin a lead</button>
+        <button id="btnLinkMode">+ Draw a connection</button>
+        <button id="btnUndo" title="Undo (Ctrl+Z)">↶ Undo<span class="shortcut">Ctrl + Z</span></button>
+        <button id="btnRedo" title="Redo (Ctrl+Y)">↷ Redo<span class="shortcut">Ctrl + Y</span></button>
+        <div class="side-sep"></div>
+        <button id="btnZoomSelected" title="Zoom in and center on the selected card (or just double-click any card)" disabled>Zoom to selected<span class="shortcut">Double-click a card</span></button>
+      </aside>
+    </div>
+    <aside id="detail">
+      <div class="detail-placeholder">Select a node to see details.</div>
+    </aside>
+  </main>
+
+  <script src="db.js"></script>
+  <script src="viewer.js"></script>
+</body>
+</html>

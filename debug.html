@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>OSINT Pivot Tracker — Debug</title>
+<link rel="stylesheet" href="debug.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Debug</h1>
+      <p>Raw capture buffer — what the extension picked up from your copies and selections.</p>
+    </div>
+    <div class="actions">
+      <button id="btnRefresh">Refresh</button>
+      <a href="viewer.html" class="btnlike">← Back to tree</a>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>Recent copies / selections captured <span class="count" id="clipCount"></span></h2>
+      <p class="hint">If a copy you made doesn't show up here at all, the capture itself failed (site blocked it, or it's in an iframe/canvas).</p>
+      <table id="clipTable"><tbody></tbody></table>
+    </section>
+  </main>
+
+  <script src="db.js"></script>
+  <script src="debug.js"></script>
+</body>
+</html>

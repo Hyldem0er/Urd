@@ -1,0 +1,107 @@
+{
+  "_comment": "Search engines used for text-to-search pivots. `host`/`path` are case-insensitive regex sources; `param` is the query-string key. Add an object to extend the list.",
+  "engines": [
+    {
+      "name": "Google",
+      "host": "(^|\\.)google\\.[a-z.]+$",
+      "path": "^/search",
+      "param": "q"
+    },
+    {
+      "name": "Bing",
+      "host": "(^|\\.)bing\\.com$",
+      "path": "^/search",
+      "param": "q"
+    },
+    {
+      "name": "DuckDuckGo",
+      "host": "(^|\\.)duckduckgo\\.com$",
+      "path": ".*",
+      "param": "q"
+    },
+    {
+      "name": "Yandex",
+      "host": "(^|\\.)yandex\\.[a-z]+$",
+      "path": "^/search",
+      "param": "text"
+    },
+    {
+      "name": "Startpage",
+      "host": "(^|\\.)startpage\\.com$",
+      "path": ".*",
+      "param": "query"
+    },
+    {
+      "name": "Yahoo",
+      "host": "(^|\\.)search\\.yahoo\\.com$",
+      "path": "^/search",
+      "param": "p"
+    },
+    {
+      "name": "Baidu",
+      "host": "(^|\\.)baidu\\.com$",
+      "path": "^/s",
+      "param": "wd"
+    },
+    {
+      "name": "Ecosia",
+      "host": "(^|\\.)ecosia\\.org$",
+      "path": "^/search",
+      "param": "q"
+    },
+    {
+      "name": "Brave Search",
+      "host": "(^|\\.)search\\.brave\\.com$",
+      "path": ".*",
+      "param": "q"
+    },
+    {
+      "name": "Qwant",
+      "host": "(^|\\.)qwant\\.com$",
+      "path": ".*",
+      "param": "q"
+    },
+    {
+      "name": "Mojeek",
+      "host": "(^|\\.)mojeek\\.com$",
+      "path": "^/search",
+      "param": "q"
+    },
+    {
+      "name": "Yep",
+      "host": "(^|\\.)yep\\.com$",
+      "path": "^/web",
+      "param": "q"
+    },
+    {
+      "name": "Presearch",
+      "host": "(^|\\.)presearch\\.com$",
+      "path": "^/search",
+      "param": "q"
+    },
+    {
+      "name": "Shodan",
+      "host": "(^|\\.)shodan\\.io$",
+      "path": "^/search",
+      "param": "query"
+    },
+    {
+      "name": "Censys",
+      "host": "(^|\\.)search\\.censys\\.io$",
+      "path": ".*",
+      "param": "resource"
+    },
+    {
+      "name": "Yandex Images",
+      "host": "(^|\\.)yandex\\.[a-z]+$",
+      "path": "^/images/search",
+      "param": "text"
+    },
+    {
+      "name": "Bing Images",
+      "host": "(^|\\.)bing\\.com$",
+      "path": "^/images/search",
+      "param": "q"
+    }
+  ]
+}

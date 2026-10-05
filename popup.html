@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --grey: #1c2023;
+    --grey-dark: #0c0e10;
+    --card: #171b1e;
+    --card-edge: #3a4046;
+    --ink: #e7ebee;
+    --ink-dim: #8a949b;
+    --string-pivot: #ff3b4e;
+    --string-translate: #2fd8e8;
+    --danger: #b3182a;
+    --hand: "Segoe UI", "Arial Narrow", Arial, sans-serif;
+    --mono: "Consolas", "Courier New", monospace;
+    --crimson: #7c2929;
+    /* Norse falls back gracefully if assets/fonts/Norse*.otf fail to load — see assets/fonts/README.txt */
+    --font-norse: "Norse", "Arial Narrow", Arial, sans-serif;
+    --font-body: "Montserrat", "Segoe UI", Arial, sans-serif;
+  }
+  @font-face {
+    font-family: "Norse";
+    src: url("assets/fonts/Norse.otf") format("opentype");
+    font-weight: 400;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Montserrat";
+    src: url("assets/fonts/montserrat-latin-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Montserrat";
+    src: url("assets/fonts/montserrat-latin-600-normal.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+  body {
+    width: 270px;
+    margin: 0;
+    background: var(--grey-dark);
+    color: var(--ink);
+    font: 13px/1.4 var(--mono);
+  }
+  .head {
+    padding: 14px 16px;
+    background: var(--crimson);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .head-icon { width: 34px; height: 34px; object-fit: contain; flex: none; display: block; }
+  .head-text { flex: 1; min-width: 0; }
+  .head h1 {
+    font-size: 18px;
+    margin: 0 0 3px;
+    letter-spacing: 0.08em;
+    font-weight: 400;
+    font-family: var(--font-norse);
+    color: #fff;
+  }
+  .head p {
+    margin: 0;
+    color: rgba(255,255,255,.72);
+    font-size: 10.5px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    letter-spacing: .01em;
+  }
+  .stats {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+  .stat {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: 3px;
+    padding: 8px 6px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,.4);
+  }
+  .stat .n { font-size: 18px; font-weight: 700; color: var(--ink); }
+  .stat .l { font-size: 10px; color: var(--ink-dim); text-transform: uppercase; font-family: var(--mono); }
+  .stat.pivot .n { color: var(--string-pivot); text-shadow: 0 0 6px rgba(255,59,78,.6); }
+  .actions { padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+  button {
+    font: 12px var(--hand);
+    font-weight: 700;
+    letter-spacing: .02em;
+    padding: 8px 10px;
+    border-radius: 3px;
+    border: 1px solid var(--card-edge);
+    background: #242933;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+    box-shadow: none;
+  }
+  button:hover { border-color: #555e72; background: #555e72; color: #fff; box-shadow: none; }
+  button:disabled, button:disabled:hover {
+    opacity: .4;
+    cursor: default;
+    color: var(--ink-dim);
+    border-color: var(--card-edge);
+    background: #242933;
+    box-shadow: none;
+  }
+  button.primary { background: #242933; border-color: var(--card-edge); color: var(--ink); box-shadow: none; }
+  button.primary:hover { color: #fff; border-color: #555e72; background: #555e72; }
+  button.danger { background: linear-gradient(180deg, #c23347, var(--danger)); border-color: var(--danger); color: #fff; }
+  button.danger:hover { border-color: #ff8a94; background: linear-gradient(180deg, #d43e54, var(--danger)); color: #fff; box-shadow: none; }
+  button.start:hover {background: #555e72; color: #fff; box-shadow: none; }
+  button.start:disabled { opacity: .7; cursor: default; box-shadow: none; }
+  .notes-msg .link-btn {
+    background: none; border: none; padding: 0; margin-top: 3px; display: inline-block;
+    font: 11px var(--hand); font-weight: 700; text-decoration: underline;
+    color: var(--pin-favorite); cursor: pointer; text-align: left;
+  }
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 2px;
+  }
+  .toggle-row span { color: var(--ink-dim); text-transform: uppercase; font-size: 11px; letter-spacing: .03em; }
+  .switch {
+    width: 34px; height: 18px; border-radius: 10px; background: var(--grey-dark);
+    position: relative; cursor: pointer; border: 1px solid var(--card-edge);
+  }
+  .switch.on { background: var(--string-pivot); border-color: var(--string-pivot); }
+  .switch::after {
+    content: ""; position: absolute; top: 1px; left: 1px; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--card); transition: left .15s;
+  }
+  .switch.on::after { left: 17px; background: #fff; }
+
+  .notes-card {
+    margin: 0 16px 12px;
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: 3px;
+    padding: 10px 10px 9px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.4);
+  }
+  .notes-headrow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+  .notes-title { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-dim); font-family: var(--mono); }
+  .notes-status {
+    font-size: 10px; color: var(--string-translate); font-family: var(--mono);
+    opacity: 0; transition: opacity .25s;
+  }
+  .notes-status.show { opacity: 1; }
+  .notes-page {
+    font-size: 11px; color: var(--ink-dim); margin-bottom: 6px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .notes-box {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 56px;
+    resize: vertical;
+    background: #101315;
+    border: 1px solid var(--card-edge);
+    border-radius: 2px;
+    padding: 7px 8px;
+    font: 12px var(--mono);
+    color: var(--ink);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.4);
+  }
+  .notes-box:focus { outline: none; border-color: var(--string-translate); box-shadow: inset 0 1px 3px rgba(0,0,0,.4), 0 0 6px rgba(47,216,232,.3); }
+  .notes-msg { font-size: 11px; color: var(--ink-dim); line-height: 1.4; }
+</style>
+</head>
+<body>
+  <div class="head">
+    <img class="head-icon" src="assets/urd.png" alt="Urd" />
+    <div class="head-text">
+      <h1>Urd</h1>
+      <p>Time threads</p>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="n" id="statNodes">–</div><div class="l">Pages</div></div>
+    <div class="stat"><div class="n" id="statEdges">–</div><div class="l">Links</div></div>
+    <div class="stat pivot"><div class="n" id="statPivots">–</div><div class="l">Pivots</div></div>
+  </div>
+  <div class="notes-card" id="notesCard">
+    <div class="notes-headrow">
+      <span class="notes-title">Note for this page</span>
+      <span class="notes-status" id="notesStatus">Saved</span>
+    </div>
+    <div class="notes-page" id="notesPage"></div>
+    <textarea class="notes-box" id="notesBox" placeholder="Add a note about this page… saved automatically, no button needed" style="display:none;"></textarea>
+    <div class="notes-msg" id="notesMsg" style="display:none;"></div>
+  </div>
+  <div class="actions">
+    <div class="toggle-row">
+      <span>Tracking active</span>
+      <button class="switch on" id="pauseToggle"></button>
+    </div>
+    <button class="start" id="startHere">Start here</button>
+    <button class="primary" id="openViewer">Open pivot tree ↗</button>
+    <button class="danger" id="clearData">Clear all local data</button>
+  </div>
+  <script src="db.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

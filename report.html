@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>URD logs</title>
+<link rel="stylesheet" href="report.css" />
+</head>
+<body>
+  <div class="toolbar no-print">
+    <span>Save as</span>
+    <button id="btnPdf">PDF</button>
+    <button id="btnMd">Markdown</button>
+    <a href="viewer.html" id="backLink">← Back to tree</a>
+    <span id="status"></span>
+  </div>
+  <main>
+    <header class="brand">
+      <img src="icons/icon-256.png" alt="URD logo" width="56" height="56" />
+      <div>
+        <h1>URD logs</h1>
+        <a id="repoLink" href="#"></a>
+      </div>
+    </header>
+    <p class="meta" id="meta">Loading…</p>
+    <div id="log"></div>
+  </main>
+  <script src="db.js"></script>
+  <script src="report.js"></script>
+</body>
+</html>

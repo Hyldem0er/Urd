@@ -1,0 +1,55 @@
+{
+  "manifest_version": 2,
+  "name": "OSINT Pivot Tracker",
+  "version": "1.0.7",
+  "description": "Locally builds a pivot tree of your browsing activity: navigation, tab spawns, and text-to-search pivots. Nothing leaves your machine.",
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png"
+  },
+  "permissions": [
+    "webNavigation",
+    "tabs",
+    "storage",
+    "downloads",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": [
+      "db.js",
+      "background.js"
+    ],
+    "persistent": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icons/icon-48.png",
+      "96": "icons/icon-96.png"
+    },
+    "default_title": "OSINT Pivot Tracker"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "osint-pivot-tracker@local.extension",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  }
+}
