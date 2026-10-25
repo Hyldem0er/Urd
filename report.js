@@ -146,20 +146,64 @@ function wrapRows(prefix, cont, parts, cols = COLS) {
  * Flattens a tree of { parts, children } into groups of wrapped rows drawn like the `tree` command
  * (├── └── │). One group is one logical line, so a page break can be kept from splitting it.
  */
-function treeRows(items, base = "", cols = COLS) {
+function treeRows(items, base = "", cols = COLS, depth = 0) {
   const groups = [];
   items.forEach((item, i) => {
     const last = i === items.length - 1;
-    const cont = base + (last ? "    " : "│   ");
-    groups.push(wrapRows(base + (last ? "└── " : "├── "), cont, item.parts, cols));
-    groups.push(...treeRows(item.children, cont, cols));
+    // Keep the normal hierarchy for the first 20 levels. Beyond that, show the
+    // parent URL explicitly rather than letting indentation consume the page.
+    if (depth >= 20) {
+      // Preserve the indentation accumulated through level 20, then cap it.
+      // Each deeper item states its parent explicitly so the relationship stays clear
+      // without continuing to push the tree farther across the page.
+      const fromParts = item.parentUrl
+        ? [{ t: "text", text: "from: " }, { t: "link", text: item.parentUrlText || item.parentUrl, href: item.parentUrl }, { t: "text", text: " → " }, ...item.parts]
+        : [{ t: "text", text: "from: parent → " }, ...item.parts];
+      groups.push(wrapRows(base + "└ ", base + "  ", fromParts, cols));
+      groups.push(...treeRows(item.children || [], base, cols, depth + 1));
+      return;
+    }
+    const cont = base + (last ? "  " : "│ ");
+    // Compact branch characters (├ / └), without decorative horizontal dashes.
+    groups.push(wrapRows(base + (last ? "└ " : "├ "), cont, item.parts, cols));
+    groups.push(...treeRows(item.children || [], cont, cols, depth + 1));
   });
   return groups;
 }
 
+/** Short display label for long PDF links; the anchor still points to the complete URL. */
+function pdfLinkLabel(href, max = 64) {
+  if (!href || href.length <= max) return href;
+  try {
+    const u = new URL(href);
+    const firstPart = u.pathname.split("/").filter(Boolean)[0];
+    const prefix = `${u.protocol}//${u.host}${firstPart ? `/${firstPart}/` : "/"}`;
+    return prefix.length >= max ? prefix.slice(0, max - 1) + "…" : prefix + "…";
+  } catch {
+    return href.slice(0, max - 1) + "…";
+  }
+}
+
+/** Clone an entry for PDF display only, keeping full URLs in the underlying link targets. */
+function entryForPdf(entry) {
+  const shorten = (parts) => parts.map((p) => p.href
+    ? { ...p, text: pdfLinkLabel(p.href) }
+    : { ...p });
+  const cloneItems = (items) => items.map((item) => ({
+    ...item,
+    // Also shorten the displayed parent URL used by the depth-20 fallback;
+    // keep parentUrl itself unchanged as the real clickable destination.
+    parentUrlText: item.parentUrl ? pdfLinkLabel(item.parentUrl) : item.parentUrlText,
+    parts: shorten(item.parts),
+    children: cloneItems(item.children || []),
+  }));
+  return { ...entry, headParts: shorten(entry.headParts), items: cloneItems(entry.items) };
+}
+
 /** The header line followed by the tree, as groups of rows wrapped to `cols` (Infinity = no wrapping). */
-function entryGroups(entry, cols = COLS) {
-  return [wrapRows("", "", entry.headParts, cols), ...treeRows(entry.items, "", cols)];
+function entryGroups(entry, cols = COLS, shortenLinks = false) {
+  const source = shortenLinks ? entryForPdf(entry) : entry;
+  return [wrapRows("", "", source.headParts, cols), ...treeRows(source.items, "", cols)];
 }
 
 /**
@@ -234,22 +278,23 @@ function buildLog(nodes, edges, engines) {
             { t: "dim", text: "— see its own entry" },
           ],
           children: [],
+          parentUrl: (byId.get(id)?.url || ""),
         });
         continue;
       }
       const parts = pageParts(n, e);
       if (revisit) {
         parts.push({ t: "dim", text: " (listed elsewhere)" });
-        items.push({ parts, children: [] });
+        items.push({ parts, children: [], parentUrl: (byId.get(id)?.url || "") });
         continue;
       }
       if (expanded.has(n.id)) {
         parts.push({ t: "dim", text: " (listed elsewhere)" });
-        items.push({ parts, children: [] });
+        items.push({ parts, children: [], parentUrl: (byId.get(id)?.url || "") });
         continue;
       }
       expanded.add(n.id);
-      const item = { parts, children: [] };
+      const item = { parts, children: [], parentUrl: (byId.get(id)?.url || "") };
       items.push(item);
       item.children = walk(n.id);
     }
@@ -318,6 +363,7 @@ function renderLog(log) {
       if (part.t === "link") {
         const a = document.createElement("a");
         a.href = part.href;
+        a.title = part.href;
         a.textContent = part.text;
         div.appendChild(a);
       } else if (part.t === "text") {
@@ -334,7 +380,7 @@ function renderLog(log) {
   for (const entry of log.entries) {
     const section = document.createElement("section");
     section.className = "search";
-    entryGroups(entry).forEach((rows, i) => {
+    entryGroups(entry, COLS, true).forEach((rows, i) => {
       // One block per logical line, so the PDF never splits a page's description across two pages.
       const block = document.createElement("div");
       block.className = i === 0 ? "block head" : "block";
@@ -347,7 +393,7 @@ function renderLog(log) {
 
 /** The report as Markdown: title, repository link, then one fenced tree per search. */
 function toMarkdown(log, generated) {
-  const out = ["# URD logs", "", `Repository: ${REPO_URL}`, "", generated, ""];
+  const out = ["# URD threads", "", `Repository: ${REPO_URL}`, "", generated, ""];
   if (!log.entries.length) out.push("Nothing recorded yet.", "");
   for (const entry of log.entries) {
     const text = entryGroups(entry, Infinity)

@@ -1,13 +1,96 @@
-/** Strips the #fragment (a scroll anchor) but keeps the query string, so "the same page" merges into one card. */
+/** True for known interactive map URLs whose viewport can change without changing the destination. */
+function isMapUrl(url) {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase().replace(/^www\./, "");
+    const path = u.pathname.toLowerCase();
+    return (
+      (/(^|\.)google\.[a-z.]+$/.test(host) && /^\/maps(?:\/|$)/.test(path)) ||
+      host === "openstreetmap.org" || host.endsWith(".openstreetmap.org") ||
+      ((host === "bing.com" || host.endsWith(".bing.com")) && /\/maps(?:\/|$)/.test(path)) ||
+      ((host === "waze.com" || host.endsWith(".waze.com")) && /\/live-map(?:\/|$)/.test(path)) ||
+      host === "wego.here.com" || ((host === "here.com" || host.endsWith(".here.com")) && (/\/maps?(?:\/|$)/.test(path) || host === "wego.here.com")) ||
+      host === "maps.apple.com" ||
+      host === "mapy.cz" || host.endsWith(".mapy.cz") ||
+      ((/^yandex\.[a-z.]+$/.test(host) || host === "yandex.com" || host.endsWith(".yandex.com")) && /^\/maps(?:\/|$)/.test(path)) ||
+      host === "maps.me" || host.endsWith(".maps.me") ||
+      ((host === "mapquest.com" || host.endsWith(".mapquest.com")) && /\/maps?(?:\/|$)/.test(path)) ||
+      ((host === "arcgis.com" || host.endsWith(".arcgis.com")) && /\/(?:apps\/mapviewer|home\/webmap\/viewer)(?:\/|$)/.test(path))
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Strip the page fragment and normalize map-only viewport state. Keep search terms,
+ * place identifiers/names and route endpoints so different destinations remain distinct.
+ */
 function normalizeUrlKey(url) {
   if (!url) return "";
   try {
     const u = new URL(url);
     u.hash = "";
 
-    // DeepL is a SPA: ?tab=... is UI state, not a new destination, so drop it to avoid duplicate nodes.
+    // DeepL is a SPA: ?tab=... is UI state, not a new destination.
     if (/(^|\.)deepl\.com$/i.test(u.hostname)) {
       u.searchParams.delete("tab");
+    }
+
+    if (!isMapUrl(u.href)) return u.toString();
+
+    const host = u.hostname.toLowerCase().replace(/^www\./, "");
+    const path = u.pathname.toLowerCase();
+
+    // Google Maps stores viewport position and zoom in the /@lat,lon,zoom path segment.
+    if (/(^|\.)google\.[a-z.]+$/.test(host) && /^\/maps(?:\/|$)/.test(path)) {
+      u.pathname = u.pathname.replace(
+        /@-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?(?:z|m)?)?/gi,
+        "@<map-viewport>"
+      );
+      // Preserve legacy normalization for existing saved Google Maps URL keys.
+      for (const key of ["center", "ll", "sll", "viewport"]) {
+        if (u.searchParams.has(key)) u.searchParams.set(key, "<map-viewport>");
+      }
+      for (const key of ["zoom", "z"]) u.searchParams.delete(key);
+    } else if (host === "bing.com" || host.endsWith(".bing.com")) {
+      // Bing Maps: cp is the center point and lvl is viewport zoom. Keep rtp/sp and place data.
+      u.searchParams.delete("cp");
+      u.searchParams.delete("lvl");
+    } else if (host === "waze.com" || host.endsWith(".waze.com")) {
+      // Waze live map: ll/zoom describe the displayed map; `to` remains the destination.
+      u.searchParams.delete("ll");
+      u.searchParams.delete("zoom");
+    } else if (host === "wego.here.com" || host === "here.com" || host.endsWith(".here.com")) {
+      // HERE WeGo's map=lat,lon,zoom is viewport state; preserve from/to/q parameters.
+      const mapState = u.searchParams.get("map");
+      if (mapState && /^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*,\s*\d+(?:\.\d+)?\s*$/.test(mapState)) {
+        u.searchParams.delete("map");
+      }
+    } else if (host === "maps.apple.com") {
+      // Apple Maps: z is viewport zoom. Only discard ll when another field identifies
+      // the searched/selected place or route; a bare ll may itself be the destination.
+      u.searchParams.delete("z");
+      const hasPlaceOrRoute = ["q", "address", "name", "auid", "saddr", "daddr", "destination"].some((key) => u.searchParams.has(key));
+      if (hasPlaceOrRoute) u.searchParams.delete("ll");
+    } else if (host === "mapy.cz" || host.endsWith(".mapy.cz")) {
+      // Mapy.cz uses x/y/z for viewport center and zoom; place IDs remain untouched.
+      for (const key of ["x", "y", "z"]) u.searchParams.delete(key);
+    } else if (/^yandex\.[a-z.]+$/.test(host) || host === "yandex.com" || host.endsWith(".yandex.com")) {
+      // Yandex Maps: ll and z are viewport state; whatshere/route/search fields remain.
+      u.searchParams.delete("ll");
+      u.searchParams.delete("z");
+    } else if (host === "mapquest.com" || host.endsWith(".mapquest.com")) {
+      for (const key of ["center", "zoom", "map"] ) u.searchParams.delete(key);
+    } else if ((host === "arcgis.com" || host.endsWith(".arcgis.com")) && /\/(?:apps\/mapviewer|home\/webmap\/viewer)(?:\/|$)/.test(path)) {
+      for (const key of ["center", "extent", "level", "zoom", "scale"]) u.searchParams.delete(key);
+    } else {
+      // Generic map viewport parameters, only on recognized map sites. Do not strip raw
+      // lat/lon or destination parameters: those may identify an actual place or route.
+      for (const key of ["bbox", "bounds", "extent", "viewport", "zoom", "level", "scale"]) {
+        u.searchParams.delete(key);
+      }
     }
 
     return u.toString();

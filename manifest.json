@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Urd",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Locally builds a pivot tree of your browsing activity: navigation, tab spawns, and text-to-search pivots.",
   "icons": {
     "48": "icons/icon-48.png",
@@ -43,7 +43,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "urd@local.extension",
+      "id": "Urd@local.extension",
       "strict_min_version": "109.0",
       "data_collection_permissions": {
         "required": [

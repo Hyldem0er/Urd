@@ -7,6 +7,47 @@ const MIN_PIVOT_TEXT_LEN = 3;
 const CLIP_RETENTION_MS = 60 * 60 * 1000;
 /** In-memory: last node created for each tab (tabId -> nodeId). */
 const tabLastNode = new Map();
+
+/** Reuse the last known favicon URL for each hostname instead of waiting for every tab. */
+const faviconByDomain = new Map();
+function faviconDomain(hostname) { return String(hostname || "").trim().toLowerCase().replace(/^www\./, ""); }
+function cachedFavicon(hostname) { return faviconByDomain.get(faviconDomain(hostname)) || undefined; }
+async function rememberFavicon(hostname, faviconUrl) {
+  const key = faviconDomain(hostname);
+  if (!key || !faviconUrl) return;
+  faviconByDomain.set(key, faviconUrl);
+  // Update existing nodes too, so the next render reuses the same known icon.
+  try {
+    const nodes = await PivotDB.getAllNodes();
+    await Promise.all(nodes.filter((n) => faviconDomain(n.domain) === key && n.favIconUrl !== faviconUrl)
+      .map((n) => PivotDB.updateNode(n.id, { favIconUrl: faviconUrl })));
+  } catch (error) { console.warn("Urd: could not propagate cached favicon", error); }
+}
+/** Rebuild the favicon cache from saved history on startup, then fill/update old nodes. */
+async function hydrateFaviconCache() {
+  try {
+    const nodes = await PivotDB.getAllNodes();
+    // Prefer an icon already stored on a node; one known icon is enough per hostname.
+    for (const node of nodes) {
+      const key = faviconDomain(node.domain);
+      if (key && node.favIconUrl && !faviconByDomain.has(key)) {
+        faviconByDomain.set(key, node.favIconUrl);
+      }
+    }
+    // Backfill historical nodes that have no icon, and unify nodes for the same hostname.
+    await Promise.all(nodes.map((node) => {
+      const icon = cachedFavicon(node.domain);
+      if (icon && node.favIconUrl !== icon) {
+        return PivotDB.updateNode(node.id, { favIconUrl: icon });
+      }
+      return undefined;
+    }));
+  } catch (error) {
+    console.warn("Urd: could not hydrate historical favicons", error);
+  }
+}
+// Run asynchronously so historical nodes benefit even if no new navigation occurs.
+hydrateFaviconCache();
 /** In-memory: pending parent for freshly opened tabs (tabId -> parent nodeId, from the opener). */
 const pendingParent = new Map();
 /** Last recorded URL per tab (tabId -> URL); guards against exact repeats. */
@@ -298,6 +339,7 @@ async function handleTranslationPaste(msg, sender) {
       urlKey: normalizeUrlKey(msg.url),
       title,
       domain: msgHost,
+      favIconUrl: cachedFavicon(msgHost),
       timestamp: now,
       tabId,
       transitionType: "translation",
@@ -346,6 +388,13 @@ async function recordNavigation(details, { historyState = false } = {}) {
 
   const isTranslator = isTranslatorSite(details.url);
   const searchQueryPreview = extractSearchQuery(details.url);
+
+  // Map providers often emit SPA URL updates while only the viewport pans or zooms.
+  // Reuse the current node when the normalized map destination has not changed.
+  if (historyState && isMapUrl(details.url) && tabLastNode.has(details.tabId)) {
+    const currentNode = await PivotDB.getNode(tabLastNode.get(details.tabId));
+    if (currentNode && isMapUrl(currentNode.url) && normalizeUrlKey(currentNode.url) === normalizeUrlKey(details.url)) return;
+  }
 
   // Translator SPA state changes (e.g. DeepL ?tab=) aren't new pages: keep the current node. Only a paste makes a translation.
   if (historyState && isTranslator && tabLastNode.has(details.tabId)) {
@@ -419,6 +468,7 @@ async function recordNavigation(details, { historyState = false } = {}) {
       urlKey: normalizeUrlKey(details.url),
       title: "",
       domain,
+      favIconUrl: cachedFavicon(domain),
       timestamp,
       tabId: details.tabId,
       transitionType: details.transitionType || "unknown",
@@ -548,7 +598,11 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
     PivotDB.updateNode(tabLastNode.get(tabId), { title: changeInfo.title });
   }
   if (changeInfo.favIconUrl && tabLastNode.has(tabId)) {
-    PivotDB.updateNode(tabLastNode.get(tabId), { favIconUrl: changeInfo.favIconUrl });
+    const nodeId = tabLastNode.get(tabId);
+    PivotDB.updateNode(nodeId, { favIconUrl: changeInfo.favIconUrl });
+    PivotDB.getNode(nodeId).then((node) => {
+      if (node) return rememberFavicon(node.domain, changeInfo.favIconUrl);
+    }).catch((error) => console.warn("Urd: could not cache favicon", error));
   }
 });
 
@@ -646,6 +700,7 @@ async function handleStartHere(msg) {
         urlKey: normalizeUrlKey(url),
         title: msg.title || "",
         domain,
+        favIconUrl: cachedFavicon(domain),
         timestamp: Date.now(),
         tabId,
         transitionType: "start-here",
